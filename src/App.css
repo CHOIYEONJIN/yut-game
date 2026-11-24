@@ -1,0 +1,7 @@
+/* 전체 화면 기본 스타일 */
+body {
+  margin: 0;
+  font-family: 'Malgun Gothic', sans-serif;
+  background: #f5efe3;
+  color: #2b2b2b;
+}
