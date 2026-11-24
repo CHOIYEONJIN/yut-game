@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Board from './Board.jsx'
 import { throwYut, getLegalMoves, applyMove, passUnusable } from '../rules/game.js'
 import { RESULT_LABELS } from '../rules/yut.js'
+import { usableResults, stacksOnOwnPiece } from './selection.js'
 
 export default function GameScreen({ state, onChange }) {
   const [pickedResult, setPickedResult] = useState(null) // 고른 결과 (예: 'gae')
@@ -12,9 +13,10 @@ export default function GameScreen({ state, onChange }) {
   const player = state.players[state.current]
   const moves = getLegalMoves(state)
 
-  // 모인 결과가 한 종류뿐이면 자동으로 고른 것으로 본다 (클릭을 줄이기 위해)
-  const kinds = [...new Set(state.pool)]
-  const result = state.pool.includes(pickedResult) ? pickedResult : kinds.length === 1 ? kinds[0] : null
+  // 지금 실제로 쓸 수 있는 결과들 (예: 판에 말이 없으면 빽도는 못 씀)
+  const usable = usableResults(state, moves)
+  // 쓸 수 있는 결과가 한 종류뿐이면 자동으로 고른 것으로 본다 (클릭을 줄이기 위해)
+  const result = usable.includes(pickedResult) ? pickedResult : usable.length === 1 ? usable[0] : null
 
   // 고른 결과로 할 수 있는 이동들, 그중 고른 말의 이동들
   const resultMoves = result ? moves.filter((m) => state.pool[m.resultIndex] === result) : []
@@ -35,6 +37,7 @@ export default function GameScreen({ state, onChange }) {
     key: String(i),
     to: m.to,
     finishes: m.finishes,
+    stacks: stacksOnOwnPiece(state, m), // 내 말 위로 가면 "업기"라고 표시
     label: m.finishes ? '완주' : `${m.route === 'shortcut' ? '지름길로 ' : m.route === 'outer' ? '바깥길로 ' : ''}${m.to}번 칸으로 이동`,
   }))
 
@@ -89,7 +92,8 @@ export default function GameScreen({ state, onChange }) {
                   key={i}
                   type="button"
                   className={r === result ? 'chip active' : 'chip'}
-                  disabled={state.phase !== 'move'}
+                  disabled={state.phase !== 'move' || !usable.includes(r)}
+                  title={state.phase === 'move' && !usable.includes(r) ? '지금은 이 결과로 움직일 수 있는 말이 없습니다' : undefined}
                   aria-pressed={r === result}
                   onClick={() => pickResult(r)}
                 >
@@ -106,7 +110,12 @@ export default function GameScreen({ state, onChange }) {
             {pickedPiece === null ? (
               <p className="hint">움직일 말을 고르세요 (판 위 노란 테두리)</p>
             ) : (
-              <p className="hint">갈 곳을 고르세요 (깜빡이는 자리)</p>
+              <>
+                <p className="hint">갈 곳을 고르세요 (깜빡이는 자리)</p>
+                <button type="button" className="chip" onClick={() => setPickedPiece(null)}>
+                  다른 말 고르기
+                </button>
+              </>
             )}
             {homeMove && (
               <button

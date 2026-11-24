@@ -348,3 +348,11 @@ button {
   padding: 2px 8px;
   border-radius: 999px;
 }
+
+/* "업기" 표시: 내 말 위로 가는 자리 */
+.stack-text {
+  fill: var(--gold);
+  paint-order: stroke;
+  stroke: var(--ink);
+  stroke-width: 5px;
+}

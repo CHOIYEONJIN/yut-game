@@ -84,6 +84,7 @@ export default function Board({ state, clickablePieceIds = [], selectedPieceId =
           >
             <circle cx={p.x} cy={p.y} r="30" />
             {t.finishes && <text x={p.x} y={p.y + 6} className="target-text">완주</text>}
+            {t.stacks && <text x={p.x} y={p.y - 38} className="target-text stack-text">업기</text>}
           </g>
         )
       })}
