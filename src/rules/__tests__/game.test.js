@@ -237,10 +237,10 @@ describe('업기', () => {
 })
 
 describe('턴 진행', () => {
-  test('결과를 다 쓰면 다음 플레이어 (2인: 0 → 1)', () => {
-    let s = withPool(twoPlayers(), ['gae'])
+  test('결과를 다 쓰면 다음 플레이어 (2인: 0 → 1), 방금 던진 결과도 지운다', () => {
+    let s = { ...withPool(twoPlayers(), ['gae']), lastThrow: 'gae' }
     s = applyMove(s, getLegalMoves(s)[0])
-    expect(s).toMatchObject({ current: 1, phase: 'throw', throwsLeft: 1, pool: [] })
+    expect(s).toMatchObject({ current: 1, phase: 'throw', throwsLeft: 1, pool: [], lastThrow: null })
   })
 
   test('3인: 마지막 플레이어 다음은 처음 플레이어', () => {
@@ -277,5 +277,14 @@ describe('승리', () => {
     expect(throwYut(s, fixedRandom('gae'))).toEqual(s)
     expect(getLegalMoves(s)).toEqual([])
     expect(applyMove(s, { resultIndex: 0, pieceId: 4, route: null })).toEqual(s)
+  })
+})
+
+describe('안내 문구', () => {
+  test('잡으면 한 번 더 던지라고 알려 준다', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 1, [0, 1])
+    s = withPool(setPiece(s, 4, 'board', 3, [0, 3]), ['gae'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.message).toBe('상대 말을 잡았습니다! 한 번 더 던지세요')
   })
 })

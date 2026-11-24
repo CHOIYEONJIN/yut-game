@@ -171,7 +171,7 @@ export function applyMove(state, move) {
 
   // 쓴 결과를 모음에서 뺀다
   next.pool.splice(legal.resultIndex, 1)
-  next.message = ''
+  next.message = next.throwsLeft > 0 ? '상대 말을 잡았습니다! 한 번 더 던지세요' : ''
 
   // 승리: 내 말 4개가 모두 완주했으면 게임 끝
   const mine = next.pieces.filter((p) => p.owner === next.current)
@@ -198,6 +198,7 @@ function startNextTurn(state) {
   state.phase = 'throw'
   state.throwsLeft = 1
   state.pool = []
+  state.lastThrow = null // 앞 사람이 던진 결과는 지운다
 }
 
 // 남은 결과를 하나도 쓸 수 없을 때, 버리고 턴을 넘긴다.

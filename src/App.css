@@ -132,3 +132,219 @@ button {
     stroke-dashoffset: 14;
   }
 }
+
+/* ---------- 공통 버튼 ---------- */
+.primary {
+  background: var(--gold);
+  color: var(--ink);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.primary:hover {
+  filter: brightness(1.08);
+}
+
+.chip {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--muted);
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 1rem;
+}
+
+.chip.active {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  flex: none;
+}
+
+.title {
+  font-size: 2.6rem;
+  margin: 0 0 24px;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- 시작 화면, 결과 화면 ---------- */
+.setup,
+.result {
+  max-width: 420px;
+  margin: 64px auto;
+  padding: 0 16px;
+}
+
+.setup fieldset {
+  border: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.setup legend {
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.name-row input {
+  flex: 1;
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 2px solid var(--muted);
+  background: var(--indigo-deep);
+  color: var(--text);
+}
+
+.result {
+  text-align: center;
+}
+
+.result-stone {
+  display: inline-block;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 5px solid var(--ink);
+  margin-bottom: 16px;
+}
+
+/* ---------- 게임 화면 ---------- */
+.game {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  padding: 24px 16px;
+  max-width: 1100px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.game-board {
+  flex: 1 1 480px;
+  max-width: 640px;
+}
+
+.panel {
+  flex: 1 1 300px;
+  background: var(--indigo-deep);
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.turn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+}
+
+.turn .dot {
+  width: 20px;
+  height: 20px;
+}
+
+.message {
+  background: rgba(226, 178, 74, 0.15);
+  border-left: 4px solid var(--gold);
+  padding: 8px 12px;
+  margin: 0 0 16px;
+}
+
+.throw {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.last-throw {
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+
+.last-throw strong {
+  color: var(--text);
+  font-size: 1.8rem;
+  margin-left: 8px;
+}
+
+.hint {
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.pool,
+.move-help {
+  margin-bottom: 16px;
+}
+
+.pool-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.players {
+  list-style: none;
+  padding: 16px 0 0;
+  margin: 0;
+  border-top: 1px solid rgba(169, 177, 198, 0.3);
+}
+
+.players li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.players li.current {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.player-name {
+  font-weight: 700;
+}
+
+.counts {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.waiting-badge {
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
