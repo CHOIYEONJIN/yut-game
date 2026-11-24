@@ -83,5 +83,5 @@ for (const names of [['가', '나'], ['가', '나', '다'], ['가', '나', '다'
     for (const [name, count] of Object.entries(seen)) {
       expect(count, name).toBeGreaterThan(0)
     }
-  })
+  }, 30000) // 100판을 두므로 시간이 걸린다. 기본 제한(5초) 대신 30초까지 기다린다
 }
