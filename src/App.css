@@ -300,35 +300,6 @@ button {
   gap: 8px;
 }
 
-.players {
-  list-style: none;
-  padding: 16px 0 0;
-  margin: 0;
-  border-top: 1px solid rgba(169, 177, 198, 0.3);
-}
-
-.players li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  padding: 8px;
-  border-radius: 6px;
-}
-
-.players li.current {
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.player-name {
-  font-weight: 700;
-}
-
-.counts {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
 .waiting-badge {
   background: var(--gold);
   color: var(--ink);
@@ -457,4 +428,75 @@ button {
   100% {
     transform: scale(1);
   }
+}
+
+/* ---------- 판 옆 대기 공간 ---------- */
+.tray {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.tray-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--indigo-deep);
+}
+
+.tray-row.current {
+  outline: 2px solid rgba(226, 178, 74, 0.6);
+}
+
+.tray-name {
+  font-weight: 700;
+  min-width: 6em;
+}
+
+.tray-slots {
+  display: flex;
+  gap: 8px;
+}
+
+.stone,
+.slot {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
+.stone {
+  border: 3px solid var(--ink);
+  padding: 0;
+}
+
+.stone:disabled {
+  cursor: default;
+}
+
+.stone.clickable {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px var(--gold);
+}
+
+.stone.selected {
+  border-color: #fff;
+  box-shadow: 0 0 0 3px #fff;
+}
+
+.slot {
+  border: 2px dashed rgba(169, 177, 198, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.slot.done {
+  border-style: solid;
+  border-width: 3px;
 }

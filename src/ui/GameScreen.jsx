@@ -6,6 +6,7 @@ import { throwYut, getLegalMoves, applyMove, passUnusable } from '../rules/game.
 import { RESULT_LABELS } from '../rules/yut.js'
 import { usableResults, stacksOnOwnPiece } from './selection.js'
 import YutSticks from './YutSticks.jsx'
+import HomeTray from './HomeTray.jsx'
 
 // 윷가락이 굴러가는 시간 (밀리초). App.css의 stick-roll 움직임 길이와 맞춘다.
 const ROLL_MS = 900
@@ -27,9 +28,8 @@ export default function GameScreen({ state, onChange }) {
   // 고른 결과로 할 수 있는 이동들, 그중 고른 말의 이동들
   const resultMoves = result ? moves.filter((m) => state.pool[m.resultIndex] === result) : []
   const pieceMoves = resultMoves.filter((m) => m.pieceId === pickedPiece)
+  // 누를 수 있는 말 (판 위의 말은 윷판에서, 출발 전 말은 대기 공간에서 누른다)
   const clickableIds = [...new Set(resultMoves.map((m) => m.pieceId))]
-  // 출발 전 말을 꺼낼 수 있는지 (출발 전 말은 판 밖에 있으므로 패널의 버튼으로 고른다)
-  const homeMove = resultMoves.find((m) => state.pieces[m.pieceId].status === 'home')
 
   // 상태가 바뀌면 고른 것들을 초기화한다
   const update = (next) => {
@@ -81,6 +81,7 @@ export default function GameScreen({ state, onChange }) {
           onPieceClick={setPickedPiece}
           onTargetClick={(key) => update(applyMove(state, pieceMoves[Number(key)]))}
         />
+        <HomeTray state={state} clickablePieceIds={clickableIds} selectedPieceId={pickedPiece} onPieceClick={setPickedPiece} />
       </div>
 
       <aside className="panel">
@@ -134,7 +135,7 @@ export default function GameScreen({ state, onChange }) {
         {state.phase === 'move' && moves.length > 0 && result && (
           <div className="move-help">
             {pickedPiece === null ? (
-              <p className="hint">움직일 말을 고르세요 (판 위 노란 테두리)</p>
+              <p className="hint">움직일 말을 고르세요 (판이나 대기 공간의 노란 테두리)</p>
             ) : (
               <>
                 <p className="hint">갈 곳을 고르세요 (깜빡이는 자리)</p>
@@ -142,15 +143,6 @@ export default function GameScreen({ state, onChange }) {
                   다른 말 고르기
                 </button>
               </>
-            )}
-            {homeMove && (
-              <button
-                type="button"
-                className={pickedPiece === homeMove.pieceId ? 'chip active' : 'chip'}
-                onClick={() => setPickedPiece(homeMove.pieceId)}
-              >
-                새 말 꺼내기
-              </button>
             )}
           </div>
         )}
@@ -164,23 +156,6 @@ export default function GameScreen({ state, onChange }) {
           </div>
         )}
 
-        {/* 플레이어 현황 */}
-        <ul className="players">
-          {state.players.map((p, i) => {
-            const mine = state.pieces.filter((x) => x.owner === i)
-            const count = (status) => mine.filter((x) => x.status === status).length
-            return (
-              <li key={i} className={i === state.current ? 'current' : ''}>
-                <span className="dot" style={{ background: p.color }} aria-hidden="true" />
-                <span className="player-name">{p.name}</span>
-                <span className="counts">
-                  출발 전 {count('home')}, 판 위 {count('board')}, 완주 {count('done')}
-                </span>
-                {count('waiting') > 0 && <span className="waiting-badge">완주 대기 중 {count('waiting')}</span>}
-              </li>
-            )
-          })}
-        </ul>
       </aside>
     </div>
   )
