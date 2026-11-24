@@ -1,7 +1,134 @@
-/* 전체 화면 기본 스타일 */
+/* ---------- 색과 글꼴 (한 곳에서 관리) ---------- */
+:root {
+  --indigo: #1f2b47; /* 쪽빛: 화면 바탕 */
+  --indigo-deep: #18223a; /* 패널 바탕 */
+  --hanji: #e8e1cc; /* 한지: 윷판 바탕 */
+  --ink: #26221d; /* 먹: 윷판 선 */
+  --text: #eef0f5; /* 바탕 위 글자 */
+  --muted: #a9b1c6; /* 흐린 글자 */
+  --gold: #e2b24a; /* 강조 (고를 수 있는 것) */
+  font-family: 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif;
+}
+
 body {
   margin: 0;
-  font-family: 'Malgun Gothic', sans-serif;
-  background: #f5efe3;
-  color: #2b2b2b;
+  background: var(--indigo);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ---------- 윷판 ---------- */
+.board {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  display: block;
+}
+
+.board-paper {
+  fill: var(--hanji);
+}
+
+.board-line {
+  stroke: var(--ink);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.board-point {
+  fill: var(--hanji);
+  stroke: var(--ink);
+  stroke-width: 4;
+}
+
+.board-caption {
+  fill: var(--muted);
+  font-size: 20px;
+  text-anchor: middle;
+}
+
+.waiting-label {
+  fill: var(--gold);
+  font-size: 22px;
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--ink);
+  stroke-width: 5px;
+}
+
+/* 말 */
+.piece circle {
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+.piece-count {
+  fill: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: var(--ink);
+  stroke-width: 4px;
+}
+
+.piece.clickable {
+  cursor: pointer;
+}
+
+.piece.clickable circle {
+  stroke: var(--gold);
+  stroke-width: 6;
+}
+
+.piece.selected circle {
+  stroke: #fff;
+  stroke-width: 7;
+}
+
+/* 갈 수 있는 곳 */
+.target {
+  cursor: pointer;
+}
+
+.target circle {
+  fill: rgba(226, 178, 74, 0.35);
+  stroke: var(--gold);
+  stroke-width: 4;
+  stroke-dasharray: 8 6;
+}
+
+.target:hover circle,
+.target:focus-visible circle {
+  fill: rgba(226, 178, 74, 0.6);
+}
+
+.target-text {
+  fill: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .target circle {
+    animation: target-pulse 1.4s ease-in-out infinite;
+  }
+}
+
+@keyframes target-pulse {
+  50% {
+    stroke-dashoffset: 14;
+  }
 }
