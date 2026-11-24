@@ -284,17 +284,6 @@ button {
   margin-bottom: 16px;
 }
 
-.last-throw {
-  color: var(--muted);
-  margin: 0 0 16px;
-}
-
-.last-throw strong {
-  color: var(--text);
-  font-size: 1.8rem;
-  margin-left: 8px;
-}
-
 .hint {
   color: var(--muted);
   margin: 0 0 8px;
@@ -355,4 +344,117 @@ button {
   paint-order: stroke;
   stroke: var(--ink);
   stroke-width: 5px;
+}
+
+/* ---------- 윷가락과 멍석 ---------- */
+.yut-area {
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.yut-svg {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.mat {
+  fill: #b8955a; /* 짚 색 */
+  stroke: #7a5c2e;
+  stroke-width: 3;
+}
+
+.mat-weave {
+  stroke: #9d7b45;
+  stroke-width: 2;
+}
+
+.stick-flat {
+  fill: #f1e2bd; /* 배: 밝은 나무 속살 */
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+
+.stick-mark line {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.stick-backdo {
+  fill: #c62828;
+}
+
+.stick-round {
+  fill: #8a5a2b; /* 등: 짙은 나무 껍질 */
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+
+.stick-shine {
+  fill: #a8733d;
+}
+
+.stick {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.stick.idle {
+  opacity: 0.45;
+}
+
+.yut-result {
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin: 4px 0 0;
+  min-height: 1.3em;
+  line-height: 1.3;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 던질 때: 위로 튀어 오르며 빙글빙글 돌다가 떨어진다 */
+  .stick.rolling {
+    animation: stick-roll 0.9s cubic-bezier(0.3, 0.6, 0.4, 1) both;
+  }
+
+  /* 결과가 나오면 글자가 한 번 커졌다 돌아온다 */
+  .yut-result {
+    animation: result-pop 0.35s ease-out;
+  }
+}
+
+@keyframes stick-roll {
+  0% {
+    transform: translateY(0) rotate(0deg) scaleX(1);
+  }
+  25% {
+    transform: translateY(-40px) rotate(160deg) scaleX(-1);
+  }
+  50% {
+    transform: translateY(-55px) rotate(320deg) scaleX(1);
+  }
+  75% {
+    transform: translateY(-20px) rotate(500deg) scaleX(-1);
+  }
+  100% {
+    transform: translateY(0) rotate(720deg) scaleX(1);
+  }
+}
+
+@keyframes result-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
 }

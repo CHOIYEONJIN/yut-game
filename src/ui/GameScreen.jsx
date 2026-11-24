@@ -5,10 +5,16 @@ import Board from './Board.jsx'
 import { throwYut, getLegalMoves, applyMove, passUnusable } from '../rules/game.js'
 import { RESULT_LABELS } from '../rules/yut.js'
 import { usableResults, stacksOnOwnPiece } from './selection.js'
+import YutSticks from './YutSticks.jsx'
+
+// 윷가락이 굴러가는 시간 (밀리초). App.css의 stick-roll 움직임 길이와 맞춘다.
+const ROLL_MS = 900
 
 export default function GameScreen({ state, onChange }) {
   const [pickedResult, setPickedResult] = useState(null) // 고른 결과 (예: 'gae')
   const [pickedPiece, setPickedPiece] = useState(null) // 고른 말 id
+  const [rolling, setRolling] = useState(null) // 윷이 굴러가는 동안 기다리는 "다음 상태" (아니면 null)
+  const [rollKey, setRollKey] = useState(0) // 던질 때마다 1씩 늘려 굴러가는 움직임을 다시 시작
 
   const player = state.players[state.current]
   const moves = getLegalMoves(state)
@@ -41,6 +47,24 @@ export default function GameScreen({ state, onChange }) {
     label: m.finishes ? '완주' : `${m.route === 'shortcut' ? '지름길로 ' : m.route === 'outer' ? '바깥길로 ' : ''}${m.to}번 칸으로 이동`,
   }))
 
+  // 윷 던지기: 결과는 바로 정하지만, 가락이 굴러가는 동안(약 0.9초)은 화면에 결과를 알리지 않는다.
+  // "움직임 줄이기"를 켠 사용자에게는 굴러가는 효과 없이 바로 보여 준다.
+  const throwSticksNow = () => {
+    if (rolling) return
+    const next = throwYut(state)
+    setRollKey((k) => k + 1)
+    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduceMotion) {
+      update(next)
+      return
+    }
+    setRolling(next)
+    setTimeout(() => {
+      setRolling(null)
+      update(next)
+    }, ROLL_MS)
+  }
+
   const pickResult = (r) => {
     setPickedResult(r)
     setPickedPiece(null)
@@ -67,17 +91,19 @@ export default function GameScreen({ state, onChange }) {
 
         {state.message && <p className="message" role="status">{state.message}</p>}
 
+        {/* 윷가락 그림: 굴러가는 중이면 새 결과의 모양을, 아니면 마지막 결과를 보여 준다 */}
+        <YutSticks
+          sticks={rolling ? rolling.lastSticks : state.lastSticks}
+          rolling={Boolean(rolling)}
+          rollKey={rollKey}
+          resultLabel={state.lastThrow ? RESULT_LABELS[state.lastThrow] : null}
+        />
+
         {/* 던지기 단계 */}
         {state.phase === 'throw' && (
-          <button type="button" className="primary throw" onClick={() => update(throwYut(state))}>
-            윷 던지기
+          <button type="button" className="primary throw" disabled={Boolean(rolling)} onClick={throwSticksNow}>
+            {rolling ? '던지는 중…' : '윷 던지기'}
           </button>
-        )}
-
-        {state.lastThrow && (
-          <p className="last-throw">
-            방금 던진 결과 <strong>{RESULT_LABELS[state.lastThrow]}</strong>
-          </p>
         )}
 
         {/* 모인 결과 */}
