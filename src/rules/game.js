@@ -152,8 +152,65 @@ export function applyMove(state, move) {
     }
   }
 
+  if (!legal.finishes) {
+    // 잡기: 도착한 칸(0번 칸 포함)에 상대 말이 있으면 모두 출발 전으로 되돌리고, 한 번 더 던진다.
+    // (0번 칸을 지나쳐 완주하는 말은 칸에 멈추지 않으므로 잡지 않는다)
+    const caught = next.pieces.filter(
+      (p) => p.owner !== next.current && (p.status === 'board' || p.status === 'waiting') && p.pos === legal.to,
+    )
+    for (const p of caught) Object.assign(p, { status: 'home', pos: null, history: [] })
+    if (caught.length > 0) next.throwsLeft += 1
+
+    // 업기: 도착한 칸에 원래 있던 내 말들도 같은 상태와 지나온 칸 기록(움직인 말의 기록)을 갖게 한다
+    for (const p of next.pieces) {
+      if (p.owner === next.current && (p.status === 'board' || p.status === 'waiting') && p.pos === legal.to) {
+        Object.assign(p, { status: leader.status, history: [...history] })
+      }
+    }
+  }
+
   // 쓴 결과를 모음에서 뺀다
   next.pool.splice(legal.resultIndex, 1)
   next.message = ''
+
+  // 승리: 내 말 4개가 모두 완주했으면 게임 끝
+  const mine = next.pieces.filter((p) => p.owner === next.current)
+  if (mine.every((p) => p.status === 'done')) {
+    next.phase = 'over'
+    next.winner = next.current
+    return next
+  }
+
+  // 다음 단계 정하기
+  if (next.throwsLeft > 0) {
+    next.phase = 'throw' // 잡아서 얻은 추가 던지기가 있다 (남은 결과는 그대로 둔다)
+  } else if (next.pool.length === 0) {
+    startNextTurn(next) // 결과를 다 썼다 → 다음 플레이어
+  } else {
+    next.phase = 'move' // 아직 쓸 결과가 남았다
+  }
   return next
+}
+
+// 다음 플레이어의 턴을 시작한다 (state를 직접 고친다. 내부에서만 사용)
+function startNextTurn(state) {
+  state.current = (state.current + 1) % state.players.length
+  state.phase = 'throw'
+  state.throwsLeft = 1
+  state.pool = []
+}
+
+// 남은 결과를 하나도 쓸 수 없을 때, 버리고 턴을 넘긴다.
+// 쓸 수 있는 이동이 하나라도 있으면 넘길 수 없다 (반드시 써야 함).
+export function passUnusable(state) {
+  if (state.phase !== 'move' || getLegalMoves(state).length > 0) return state
+  const next = structuredClone(state)
+  startNextTurn(next)
+  next.message = '쓸 수 있는 결과가 없어 턴이 넘어갑니다'
+  return next
+}
+
+// 어떤 칸에 있는 말들 (화면에서 말을 그릴 때 사용)
+export function getGroupAt(state, pos) {
+  return state.pieces.filter((p) => (p.status === 'board' || p.status === 'waiting') && p.pos === pos)
 }

@@ -155,3 +155,127 @@ describe('가능한 이동', () => {
     expect(applyMove(s, { resultIndex: 0, pieceId: 5, route: null })).toEqual(s)
   })
 })
+
+// ---------------- Task 6: 잡기, 업기, 턴 진행, 승리 ----------------
+import { passUnusable, getGroupAt } from '../game.js'
+
+describe('잡기', () => {
+  test('상대 말이 있는 칸에 멈추면 잡고 한 번 더 던진다', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 1, [0, 1])
+    s = withPool(setPiece(s, 4, 'board', 3, [0, 3]), ['gae'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pieces[4]).toMatchObject({ status: 'home', pos: null, history: [] })
+    expect(s).toMatchObject({ current: 0, phase: 'throw', throwsLeft: 1 })
+  })
+
+  test('업힌 상대 말 두 개를 함께 잡는다', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 1, [0, 1])
+    s = setPiece(s, 4, 'board', 3, [0, 3])
+    s = withPool(setPiece(s, 5, 'board', 3, [0, 3]), ['gae'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pieces[4].status).toBe('home')
+    expect(s.pieces[5].status).toBe('home')
+  })
+
+  test('빽도로 간 칸의 상대 말도 잡는다', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 7, [0, 6, 7])
+    s = withPool(setPiece(s, 4, 'board', 6, [0, 6]), ['backdo'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pieces[4].status).toBe('home')
+    expect(s.phase).toBe('throw')
+  })
+
+  test('0번 칸에 정확히 도착하면 상대의 완주 대기 말을 잡고, 내 말이 완주 대기', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 19, [0, 19])
+    s = withPool(setPiece(s, 4, 'waiting', 0, [0, 19, 0]), ['do'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pieces[4].status).toBe('home')
+    expect(s.pieces[0]).toMatchObject({ status: 'waiting', pos: 0 })
+    expect(s.phase).toBe('throw')
+  })
+
+  test('0번 칸을 지나쳐 완주하면 상대 완주 대기 말을 잡지 않는다', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 19, [0, 19])
+    s = withPool(setPiece(s, 4, 'waiting', 0, [0, 19, 0]), ['gae'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pieces[4].status).toBe('waiting')
+    expect(s.pieces[0].status).toBe('done')
+  })
+
+  test('마지막 결과로 잡아도 턴이 끝나지 않고 던지기로, 윷이면 계속', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 1, [0, 1])
+    s = withPool(setPiece(s, 4, 'board', 3, [0, 3]), ['gae'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pool).toEqual([])
+    expect(s).toMatchObject({ current: 0, phase: 'throw' })
+    s = throwYut(s, fixedRandom('yut'))
+    expect(s.phase).toBe('throw')
+  })
+})
+
+describe('업기', () => {
+  test('내 완주 대기 말에 합류하면 함께 완주 대기, 남은 결과로 함께 완주', () => {
+    let s = setPiece(twoPlayers(), 0, 'waiting', 0, [0, 19, 0])
+    s = withPool(setPiece(s, 1, 'board', 19, [0, 19]), ['do', 'gae'])
+    s = applyMove(s, find(getLegalMoves(s), 1))
+    expect(s.pieces[0]).toMatchObject({ status: 'waiting', pos: 0 })
+    expect(s.pieces[1]).toMatchObject({ status: 'waiting', pos: 0 })
+    const move = getLegalMoves(s).find((m) => m.pieceId === 0)
+    s = applyMove(s, move)
+    expect(s.pieces[0].status).toBe('done')
+    expect(s.pieces[1].status).toBe('done')
+  })
+
+  test('업으면 지나온 칸 기록은 움직인 말의 기록을 따른다', () => {
+    let s = setPiece(twoPlayers(), 0, 'board', 3, [0, 1, 2, 3])
+    s = withPool(setPiece(s, 1, 'board', 1, [0, 1]), ['gae'])
+    s = applyMove(s, find(getLegalMoves(s), 1))
+    expect(s.pieces[0].history).toEqual([0, 1, 2, 3])
+    expect(s.pieces[1].history).toEqual([0, 1, 2, 3])
+    expect(getGroupAt(s, 3).map((p) => p.id)).toEqual([0, 1])
+  })
+})
+
+describe('턴 진행', () => {
+  test('결과를 다 쓰면 다음 플레이어 (2인: 0 → 1)', () => {
+    let s = withPool(twoPlayers(), ['gae'])
+    s = applyMove(s, getLegalMoves(s)[0])
+    expect(s).toMatchObject({ current: 1, phase: 'throw', throwsLeft: 1, pool: [] })
+  })
+
+  test('3인: 마지막 플레이어 다음은 처음 플레이어', () => {
+    let s = { ...withPool(createGame(['가', '나', '다']), ['gae']), current: 2 }
+    s = applyMove(s, getLegalMoves(s)[0])
+    expect(s.current).toBe(0)
+  })
+
+  test('결과가 남아 있으면 이동 단계 유지', () => {
+    let s = withPool(twoPlayers(), ['gae', 'do'])
+    s = applyMove(s, getLegalMoves(s)[0])
+    expect(s).toMatchObject({ current: 0, phase: 'move', pool: ['do'] })
+  })
+
+  test('쓸 수 있는 결과가 없으면 턴 넘기기', () => {
+    const s = passUnusable(withPool(twoPlayers(), ['backdo']))
+    expect(s).toMatchObject({ current: 1, phase: 'throw', throwsLeft: 1, pool: [] })
+    expect(s.message).toBe('쓸 수 있는 결과가 없어 턴이 넘어갑니다')
+  })
+
+  test('쓸 수 있는 결과가 있으면 턴을 넘길 수 없다', () => {
+    const s = withPool(twoPlayers(), ['gae'])
+    expect(passUnusable(s)).toEqual(s)
+  })
+})
+
+describe('승리', () => {
+  test('4번째 말이 완주하면 게임 끝, 그 뒤로는 아무것도 바뀌지 않는다', () => {
+    let s = twoPlayers()
+    for (const id of [0, 1, 2]) s = setPiece(s, id, 'done')
+    s = withPool(setPiece(s, 3, 'board', 19, [0, 19]), ['gae', 'do'])
+    s = applyMove(s, find(getLegalMoves(s), 3))
+    expect(s).toMatchObject({ phase: 'over', winner: 0 })
+    expect(throwYut(s, fixedRandom('gae'))).toEqual(s)
+    expect(getLegalMoves(s)).toEqual([])
+    expect(applyMove(s, { resultIndex: 0, pieceId: 4, route: null })).toEqual(s)
+  })
+})
