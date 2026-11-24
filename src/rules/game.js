@@ -103,15 +103,17 @@ function movableLeaders(state) {
 // 말 하나(묶음의 대표)에 결과 하나를 썼을 때 가능한 이동들
 function movesFor(piece, result, resultIndex) {
   const steps = RESULTS[result]
-  // 완주 대기 말: 어떤 결과든(빽도 포함) 하나 쓰면 완주
-  if (piece.status === 'waiting') {
-    return [{ resultIndex, pieceId: piece.id, route: null, to: null, finishes: true }]
-  }
-  // 빽도: 출발 전 말은 못 쓰고, 판 위 말은 지나온 칸 기록의 바로 전 칸으로
+  // 빽도: 출발 전 말은 못 쓰고, 판 위 말과 완주 대기 말은 지나온 칸 기록의 바로 전 칸으로 되돌아간다.
+  // (완주 대기 말도 바깥길로 왔으면 19번, 10번 지름길로 왔으면 28번 칸으로)
+  // 1번 칸에서 빽도로 완주 대기가 된 말처럼 되돌아갈 칸이 없으면 빽도를 쓸 수 없다.
   if (steps < 0) {
-    if (piece.status !== 'board') return []
+    if (piece.status === 'home' || piece.history.length < 2) return []
     const to = piece.history[piece.history.length - 2]
     return [{ resultIndex, pieceId: piece.id, route: null, to, finishes: false }]
+  }
+  // 완주 대기 말: 도 이상이 나오면 그 결과 하나를 써서 완주
+  if (piece.status === 'waiting') {
+    return [{ resultIndex, pieceId: piece.id, route: null, to: null, finishes: true }]
   }
   // 앞으로 가기: 출발 전 말은 0번 칸에서 출발하는 것으로 계산한다
   const start = piece.status === 'home' ? START : piece.pos

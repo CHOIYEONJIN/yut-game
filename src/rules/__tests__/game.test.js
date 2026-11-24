@@ -117,12 +117,38 @@ describe('가능한 이동', () => {
     expect(find(getLegalMoves(withPool(s, ['gae'])), 0)).toMatchObject({ to: null, finishes: true })
   })
 
-  test('완주 대기 말은 빽도로도 완주', () => {
-    let s = withPool(setPiece(twoPlayers(), 0, 'waiting', 0, [0, 19, 0]), ['backdo'])
+  test('완주 대기 말에 빽도 → 바깥길로 왔으면 19번 칸으로 되돌아간다', () => {
+    let s = withPool(setPiece(twoPlayers(), 0, 'waiting', 0, [0, 18, 19, 0]), ['backdo'])
+    const move = find(getLegalMoves(s), 0)
+    expect(move).toMatchObject({ to: 19, finishes: false })
+    s = applyMove(s, move)
+    expect(s.pieces[0]).toMatchObject({ status: 'board', pos: 19, history: [0, 18, 19] })
+  })
+
+  test('완주 대기 말에 빽도 → 10번 지름길로 왔으면 28번 칸으로', () => {
+    const s = withPool(setPiece(twoPlayers(), 0, 'waiting', 0, [0, 10, 25, 26, 22, 27, 28, 0]), ['backdo'])
+    expect(find(getLegalMoves(s), 0)).toMatchObject({ to: 28, finishes: false })
+  })
+
+  test('1번 칸에서 빽도로 완주 대기가 된 말은 더 뒤로 갈 곳이 없어 빽도를 못 쓴다', () => {
+    const s = withPool(setPiece(twoPlayers(), 0, 'waiting', 0, [0]), ['backdo'])
+    expect(getLegalMoves(s)).toEqual([])
+  })
+
+  test('완주 대기 말은 도 이상이면 완주', () => {
+    let s = withPool(setPiece(twoPlayers(), 0, 'waiting', 0, [0, 19, 0]), ['do'])
     const move = find(getLegalMoves(s), 0)
     expect(move).toMatchObject({ to: null, finishes: true })
     s = applyMove(s, move)
     expect(s.pieces[0]).toMatchObject({ status: 'done', pos: null })
+  })
+
+  test('완주 대기 말이 빽도로 되돌아간 칸의 상대 말을 잡는다', () => {
+    let s = setPiece(twoPlayers(), 0, 'waiting', 0, [0, 19, 0])
+    s = withPool(setPiece(s, 4, 'board', 19, [0, 19]), ['backdo'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pieces[4].status).toBe('home')
+    expect(s.phase).toBe('throw')
   })
 
   test('같은 턴: 걸로 완주 대기가 된 말을 남은 개로 완주', () => {
