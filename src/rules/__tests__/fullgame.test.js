@@ -43,6 +43,7 @@ function playGame(names, seed, seen) {
     if (s.phase === 'over') return s
     if (s.phase === 'throw') {
       s = throwYut(s, random)
+      if (s.lastThrow === 'nak') seen.nak++
       continue
     }
     const moves = getLegalMoves(s)
@@ -72,7 +73,7 @@ function playGame(names, seed, seen) {
 
 for (const names of [['가', '나'], ['가', '나', '다'], ['가', '나', '다', '라']]) {
   test(`${names.length}명 게임을 끝까지 진행할 수 있다 (100판)`, () => {
-    const seen = { pass: 0, backdoToStart: 0, backdoOnShortcut: 0, waitingFinished: 0, waitingCaught: 0, shortcut: 0 }
+    const seen = { nak: 0, pass: 0, backdoToStart: 0, backdoOnShortcut: 0, waitingFinished: 0, waitingCaught: 0, shortcut: 0 }
     for (let seed = 1; seed <= 100; seed++) {
       const end = playGame(names, seed * 7919 + names.length, seen)
       const winnerPieces = end.pieces.filter((p) => p.owner === end.winner)

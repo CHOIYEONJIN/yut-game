@@ -1,7 +1,7 @@
 // 게임 진행 규칙
 // 이 파일은 화면(React)에 대해 전혀 모른다. "현재 상태 + 행동"을 받아 "새 상태"를 돌려줄 뿐이다.
 // 상태는 평범한 객체라서, 2단계에서 그대로 서버로 보내고 받을 수 있다.
-import { rollYut, isBonus, RESULTS } from './yut.js'
+import { throwSticks, isBonus, RESULTS } from './yut.js'
 import { START, walk, routeOptions } from './board.js'
 
 // 플레이어 색 (순서대로 빨강, 파랑, 초록, 노랑)
@@ -29,6 +29,7 @@ export function createGame(names) {
     throwsLeft: 1, // 던지기 단계에서 더 던질 수 있는 횟수
     pool: [], // 모인 윷 결과들
     lastThrow: null, // 방금 던진 결과 (화면 표시용)
+    lastSticks: null, // 방금 던진 윷가락 모양 { faces, out } (화면 표시용)
     winner: null, // 우승한 플레이어 번호
     message: '', // 화면에 보여줄 안내 문구
   }
@@ -38,10 +39,29 @@ export function createGame(names) {
 export function throwYut(state, random = Math.random) {
   if (state.phase !== 'throw') return state
   const next = structuredClone(state)
-  const result = rollYut(random)
-  next.pool.push(result)
+  const { faces, out, result } = throwSticks(random)
   next.lastThrow = result
+  next.lastSticks = { faces, out } // 화면에서 가락 모양을 그리기 위해 저장
   next.message = ''
+
+  // 낙: 이번 던지기는 무효이고 더 던질 수 없다.
+  // 모은 결과가 있으면 그것만 쓰고 차례가 끝나고, 없으면 바로 다음 사람 차례로 넘어간다.
+  if (result === 'nak') {
+    next.throwsLeft = 0
+    if (next.pool.length === 0) {
+      const name = next.players[next.current].name
+      startNextTurn(next)
+      next.lastThrow = 'nak' // 다음 사람도 낙이 나온 것을 볼 수 있게 남겨 둔다
+      next.lastSticks = { faces, out }
+      next.message = `낙! ${name}의 차례를 건너뜁니다`
+    } else {
+      next.phase = 'move'
+      next.message = '낙! 모은 결과만 쓰고 차례가 끝납니다'
+    }
+    return next
+  }
+
+  next.pool.push(result)
   next.throwsLeft -= 1
   // 윷이나 모면 한 번 더 던진다
   if (isBonus(result)) next.throwsLeft += 1
@@ -199,6 +219,7 @@ function startNextTurn(state) {
   state.throwsLeft = 1
   state.pool = []
   state.lastThrow = null // 앞 사람이 던진 결과는 지운다
+  state.lastSticks = null
 }
 
 // 남은 결과를 하나도 쓸 수 없을 때, 버리고 턴을 넘긴다.

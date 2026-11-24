@@ -288,3 +288,23 @@ describe('안내 문구', () => {
     expect(s.message).toBe('상대 말을 잡았습니다! 한 번 더 던지세요')
   })
 })
+
+describe('낙', () => {
+  test('모은 결과가 없을 때 낙 → 차례를 건너뛴다', () => {
+    const s = throwYut(createGame(['가', '나']), fixedRandom('nak'))
+    expect(s).toMatchObject({ current: 1, phase: 'throw', throwsLeft: 1, pool: [], lastThrow: 'nak' })
+    expect(s.message).toBe('낙! 가의 차례를 건너뜁니다')
+  })
+
+  test('윷 다음에 낙 → 모은 윷은 쓰고 더 던지지 않는다', () => {
+    let s = throwYut(createGame(['가', '나']), fixedRandom('yut'))
+    s = throwYut(s, fixedRandom('nak'))
+    expect(s).toMatchObject({ current: 0, phase: 'move', throwsLeft: 0, pool: ['yut'], lastThrow: 'nak' })
+    expect(s.message).toBe('낙! 모은 결과만 쓰고 차례가 끝납니다')
+  })
+
+  test('던진 가락 모양을 화면용으로 저장한다', () => {
+    const s = throwYut(createGame(['가', '나']), fixedRandom('nak'))
+    expect(s.lastSticks).toEqual({ faces: [true, true, false, false], out: [false, false, true, false] })
+  })
+})

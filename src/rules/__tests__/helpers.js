@@ -9,12 +9,13 @@ const ROLLS = {
   geol: [0.1, 0.1, 0.1, 0.9],
   yut: [0.1, 0.1, 0.1, 0.1],
   mo: [0.9, 0.9, 0.9, 0.9],
+  nak: [0.1, 0.1, 0.9, 0.9, 0.01, 0.6], // 다섯 번째 숫자가 0.05보다 작으면 낙
 }
 
 export function fixedRandom(result) {
   const values = ROLLS[result]
   let i = 0
-  return () => values[i++ % 4]
+  return () => values[i++ % values.length]
 }
 
 // 테스트 상태를 꾸미기 위해 말 하나의 상태를 직접 바꾼다 (원래 상태를 바꾸지 않고 새 상태를 돌려줌)
