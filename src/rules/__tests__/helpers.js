@@ -40,3 +40,11 @@ export function seededRandom(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
+
+// 던질 때마다 계속 같은 결과가 나오게 하는 가짜 랜덤 (여러 번 던지는 테스트용, 낙은 나오지 않음)
+// 한 번 던질 때 숫자를 5개 쓴다: 가락 4개 + 낙인지 확인 1개(0.9 → 낙 아님)
+export function repeatRandom(result) {
+  const values = [...ROLLS[result].slice(0, 4), 0.9]
+  let i = 0
+  return () => values[i++ % values.length]
+}
