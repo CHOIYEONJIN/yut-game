@@ -138,6 +138,16 @@ button {
   text-anchor: middle;
 }
 
+.target-text.small {
+  font-size: 14px;
+}
+
+/* 윷판 위(밝은 바탕)에 쓰는 결과 이름은 진하게 */
+.target-text.on-board {
+  fill: var(--ink);
+  font-size: 22px;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .target circle {
     animation: target-pulse 1.4s ease-in-out infinite;
@@ -184,6 +194,11 @@ button {
 .chip:disabled {
   opacity: 0.6;
   cursor: default;
+}
+
+/* 보여 주기만 하는 칩 (모인 결과) */
+.chip.static {
+  display: inline-block;
 }
 
 .dot {

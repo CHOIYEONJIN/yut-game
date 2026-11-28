@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 import Board from './Board.jsx'
 import { getLegalMoves } from '../rules/game.js'
 import { RESULT_LABELS } from '../rules/yut.js'
-import { usableResults, stacksOnOwnPiece } from './selection.js'
+import { stacksOnOwnPiece, pieceChoices } from './selection.js'
 import YutSticks from './YutSticks.jsx'
 import HomeTray from './HomeTray.jsx'
 import { useCountdown } from './useCountdown.js'
@@ -22,7 +22,6 @@ export default function GameScreen({ view, mySeat, onAction, onLeave }) {
   const [shown, setShown] = useState(view) // 지금 화면에 그리는 모습 (굴러가는 동안은 이전 모습)
   const [rollingSticks, setRollingSticks] = useState(null) // 굴러가는 중이면 새 윷가락 모양
   const [rollKey, setRollKey] = useState(0)
-  const [pickedResult, setPickedResult] = useState(null) // 고른 결과 (예: 'gae')
   const [pickedPiece, setPickedPiece] = useState(null) // 고른 말 id
   const [sent, setSent] = useState(false) // 행동을 보내고 서버의 답을 기다리는 중 (두 번 누르기 방지)
 
@@ -36,7 +35,6 @@ export default function GameScreen({ view, mySeat, onAction, onLeave }) {
     const show = (next) => {
       shownRef.current = next
       setShown(next)
-      setPickedResult(null)
       setPickedPiece(null)
       setSent(false)
     }
@@ -75,32 +73,23 @@ export default function GameScreen({ view, mySeat, onAction, onLeave }) {
   const seconds = useCountdown(rolling ? null : shown.turnMsLeft, shown)
 
   const moves = canAct ? getLegalMoves(state) : []
-  // 지금 실제로 쓸 수 있는 결과들 (예: 판에 말이 없으면 빽도는 못 씀)
-  const usable = usableResults(state, moves)
-  // 쓸 수 있는 결과가 한 종류뿐이면 자동으로 고른 것으로 본다 (클릭을 줄이기 위해)
-  const result = usable.includes(pickedResult) ? pickedResult : usable.length === 1 ? usable[0] : null
+  // 고를 수 있는 말: 모인 결과 중 하나라도 써서 움직일 수 있는 말
+  const clickableIds = [...new Set(moves.map((m) => m.pieceId))]
+  // 고른 말이 갈 수 있는 자리들 (자리마다 어떤 결과를 쓰는지 붙어 있다)
+  const choices = pickedPiece === null ? [] : pieceChoices(state, moves, pickedPiece)
 
-  // 고른 결과로 할 수 있는 이동들, 그중 고른 말의 이동들
-  const resultMoves = result ? moves.filter((m) => state.pool[m.resultIndex] === result) : []
-  const pieceMoves = resultMoves.filter((m) => m.pieceId === pickedPiece)
-  const clickableIds = [...new Set(resultMoves.map((m) => m.pieceId))]
-
-  const targets = pieceMoves.map((m, i) => ({
+  const targets = choices.map(({ move: m, result }, i) => ({
     key: String(i),
     to: m.to,
     finishes: m.finishes,
     stacks: stacksOnOwnPiece(state, m), // 내 말 위로 가면 "업기"라고 표시
-    label: m.finishes ? '완주' : `${m.route === 'shortcut' ? '지름길로 ' : m.route === 'outer' ? '바깥길로 ' : ''}${m.to}번 칸으로 이동`,
+    resultLabel: RESULT_LABELS[result], // 자리 위에 "도", "걸"처럼 쓸 결과를 적는다
+    label: `${RESULT_LABELS[result]}: ${m.finishes ? '완주' : `${m.route === 'shortcut' ? '지름길로 ' : m.route === 'outer' ? '바깥길로 ' : ''}${m.to}번 칸으로 이동`}`,
   }))
 
   const act = (action) => {
     setSent(true)
     onAction(action)
-  }
-
-  const pickResult = (r) => {
-    setPickedResult(r)
-    setPickedPiece(null)
   }
 
   const isMe = state.current === mySeat
@@ -115,7 +104,7 @@ export default function GameScreen({ view, mySeat, onAction, onLeave }) {
           targets={targets}
           onPieceClick={setPickedPiece}
           onTargetClick={(key) => {
-            const { resultIndex, pieceId, route } = pieceMoves[Number(key)]
+            const { resultIndex, pieceId, route } = choices[Number(key)].move
             act({ type: 'move', move: { resultIndex, pieceId, route } })
           }}
         />
@@ -164,33 +153,26 @@ export default function GameScreen({ view, mySeat, onAction, onLeave }) {
         {/* 모인 결과 */}
         {state.pool.length > 0 && (
           <div className="pool">
-            <p className="hint">{state.phase === 'throw' ? '한 번 더 던지세요. 모인 결과:' : canAct ? '쓸 결과를 고르세요' : '모인 결과:'}</p>
+            <p className="hint">{state.phase === 'throw' ? '한 번 더 던지세요. 모인 결과:' : '모인 결과:'}</p>
+            {/* 보여 주기만 한다. 어떤 결과를 쓸지는 말을 고른 뒤 갈 자리를 누르면 정해진다 */}
             <div className="pool-list">
               {state.pool.map((r, i) => (
-                <button
-                  key={i}
-                  type="button"
-                  className={r === result ? 'chip active' : 'chip'}
-                  disabled={!canAct || state.phase !== 'move' || !usable.includes(r)}
-                  title={canAct && state.phase === 'move' && !usable.includes(r) ? '지금은 이 결과로 움직일 수 있는 말이 없습니다' : undefined}
-                  aria-pressed={r === result}
-                  onClick={() => pickResult(r)}
-                >
+                <span key={i} className="chip static">
                   {RESULT_LABELS[r]}
-                </button>
+                </span>
               ))}
             </div>
           </div>
         )}
 
         {/* 이동 단계 안내 */}
-        {state.phase === 'move' && moves.length > 0 && result && (
+        {state.phase === 'move' && moves.length > 0 && (
           <div className="move-help">
             {pickedPiece === null ? (
               <p className="hint">움직일 말을 고르세요 (판 위는 점선 고리, 대기 공간은 금색 고리가 있는 말)</p>
             ) : (
               <>
-                <p className="hint">갈 곳을 고르세요 (깜빡이는 자리)</p>
+                <p className="hint">갈 곳을 고르세요 (깜빡이는 자리, 자리마다 쓸 결과가 적혀 있어요)</p>
                 <button type="button" className="chip" onClick={() => setPickedPiece(null)}>
                   다른 말 고르기
                 </button>

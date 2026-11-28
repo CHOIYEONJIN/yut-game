@@ -15,7 +15,7 @@ const onEnter = (fn) => (e) => {
 // - state: 게임 상태
 // - clickablePieceIds: 지금 누를 수 있는 말(묶음 대표) id 목록
 // - selectedPieceId: 지금 고른 말 id (없으면 null)
-// - targets: 고른 말이 갈 수 있는 곳 [{ key, to, finishes, label }]  (finishes면 완주 자리에 표시)
+// - targets: 고른 말이 갈 수 있는 곳 [{ key, to, finishes, stacks, resultLabel, label }]  (resultLabel: 그 자리로 갈 때 쓰는 결과 이름)  (finishes면 완주 자리에 표시)
 // - onPieceClick(pieceId), onTargetClick(key)
 export default function Board({ state, clickablePieceIds = [], selectedPieceId = null, targets = [], onPieceClick, onTargetClick }) {
   const waitingHere = getGroupAt(state, 0).some((p) => p.status === 'waiting')
@@ -88,7 +88,15 @@ export default function Board({ state, clickablePieceIds = [], selectedPieceId =
             onKeyDown={onEnter(() => onTargetClick?.(t.key))}
           >
             <circle cx={p.x} cy={p.y} r="30" />
-            {t.finishes && <text x={p.x} y={p.y + 6} className="target-text">완주</text>}
+            {/* 쓸 결과 이름 (예: "걸"). 완주 자리에는 "완주" 아래에 작게 적는다 */}
+            {t.finishes ? (
+              <>
+                <text x={p.x} y={p.y - 2} className="target-text">완주</text>
+                {t.resultLabel && <text x={p.x} y={p.y + 18} className="target-text small">{t.resultLabel}</text>}
+              </>
+            ) : (
+              t.resultLabel && <text x={p.x} y={p.y + 7} className="target-text on-board">{t.resultLabel}</text>
+            )}
             {t.stacks && <text x={p.x} y={p.y - 38} className="target-text stack-text">업기</text>}
           </g>
         )
