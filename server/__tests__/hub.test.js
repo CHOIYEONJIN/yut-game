@@ -69,7 +69,7 @@ async function friendlyGame() {
   return { a, b }
 }
 
-test('혼자 빠른대전 → 컴퓨터와 바로 하기 → game을 받고 mySeat이 0이다', async () => {
+test('혼자 빠른대전 → 컴퓨터와 바로 하기 → game을 받고, mySeat이 내 자리를 가리킨다', async () => {
   const a = connectAs('a')
   await waitFor(a, 'where', place('entrance'))
   a.emit('queue:join')
@@ -78,14 +78,19 @@ test('혼자 빠른대전 → 컴퓨터와 바로 하기 → game을 받고 mySe
   a.emit('queue:bots')
   await waitFor(a, 'where', place('game'))
   const game = await waitFor(a, 'game')
-  expect(game.mySeat).toBe(0)
-  expect(game.seats.map((s) => s.kind)).toEqual(['human', 'bot', 'bot', 'bot'])
+  // 차례 순서는 무작위라 내 자리가 몇 번째인지는 매번 다르다
+  expect(game.seats[game.mySeat]).toMatchObject({ name: 'a', kind: 'human' })
+  expect(game.seats.filter((s) => s.kind === 'bot').length).toBe(3)
 })
 
 test('두 사람이 친선대전 방에서 만나 시작하고, 한 사람의 던지기가 두 화면 모두에 보인다', async () => {
   const { a, b } = await friendlyGame()
-  expect((await waitFor(b, 'game')).mySeat).toBe(1)
-  a.emit('game:action', { action: { type: 'throw' } })
+  const gameA = await waitFor(a, 'game')
+  const gameB = await waitFor(b, 'game')
+  expect([gameA.mySeat, gameB.mySeat].sort()).toEqual([0, 1])
+  // 차례 순서는 무작위: 지금 차례인 사람이 던진다
+  const first = gameA.mySeat === gameA.state.current ? a : b
+  first.emit('game:action', { action: { type: 'throw' } })
   await waitFor(a, 'game', (g) => g.throwSeq === 1)
   await waitFor(b, 'game', (g) => g.throwSeq === 1)
 })
@@ -141,13 +146,14 @@ test('같은 playerId로 새 창이 접속하면 이전 창은 replaced를 받�
 
 test('게임 중 창을 닫았다 resume:false로 다시 오면 resume:offer, game:resume이면 game을 받는다', async () => {
   const { a } = await friendlyGame()
+  const { mySeat } = await waitFor(a, 'game')
   a.disconnect()
   await sleep(50)
   const a2 = connectAs('a')
   await waitFor(a2, 'resume:offer')
   a2.emit('game:resume')
   await waitFor(a2, 'where', place('game'))
-  expect((await waitFor(a2, 'game')).mySeat).toBe(0)
+  expect((await waitFor(a2, 'game')).mySeat).toBe(mySeat) // 원래 자리로 돌아온다
 })
 
 test('게임 나가기 뒤 다시 접속하면 resume:offer 없이 입구이고, 바로 빠른대전에 들어갈 수 있다', async () => {

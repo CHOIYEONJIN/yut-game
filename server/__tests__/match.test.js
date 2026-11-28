@@ -1,6 +1,6 @@
 // 서버의 게임 한 판(match.js) 검사. 가짜 시계로 시간을 돌려서 실제로 기다리지 않는다.
 import { test, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createMatch } from '../match.js'
+import { createMatch, shuffle } from '../match.js'
 import { createGame, getLegalMoves } from '../../src/rules/game.js'
 import { repeatRandom, setPiece } from '../../src/rules/__tests__/helpers.js'
 
@@ -198,4 +198,19 @@ test('우승자가 나오면 마지막 상태를 보낸 뒤 onEnd({ winner })', 
     ['update', 'over'],
     ['end', 0],
   ])
+})
+
+test('shuffle은 순서만 섞고, 원래 목록은 건드리지 않는다', () => {
+  const list = ['a', 'b', 'c', 'd']
+  // random이 항상 0이면: 뒤에서부터 매번 맨 앞과 자리를 바꾼다
+  expect(shuffle(list, () => 0)).toEqual(['b', 'c', 'd', 'a'])
+  // random이 0.999면 아무것도 바꾸지 않는다
+  expect(shuffle(list, () => 0.999)).toEqual(['a', 'b', 'c', 'd'])
+  expect(list).toEqual(['a', 'b', 'c', 'd'])
+})
+
+test('shuffle을 여러 번 하면 누구나 첫 번째가 될 수 있다', () => {
+  const firsts = new Set()
+  for (let i = 0; i < 200; i++) firsts.add(shuffle(['a', 'b', 'c', 'd'])[0])
+  expect([...firsts].sort()).toEqual(['a', 'b', 'c', 'd'])
 })

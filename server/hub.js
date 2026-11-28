@@ -3,7 +3,7 @@
 // 화면에서 온 메시지를 빠른대전 줄(matchmaking.js), 친선대전 방(rooms.js), 게임 한 판(match.js)에 전달한다.
 import { createQueue } from './matchmaking.js'
 import { createRooms } from './rooms.js'
-import { createMatch } from './match.js'
+import { createMatch, shuffle } from './match.js'
 
 // 닉네임 정리: 앞뒤 공백을 빼고 최대 10글자, 비어 있으면 기본 이름
 function cleanName(name) {
@@ -54,7 +54,8 @@ export function createHub(io, timing = {}) {
     }
   }
 
-  function beginMatch(seats, code) {
+  function beginMatch(joinOrder, code) {
+    const seats = shuffle(joinOrder) // 차례 순서는 들어온 순서가 아니라 무작위
     const id = nextMatchId++
     const players = seats.filter((s) => s.kind === 'human').map((s) => s.playerId)
     const entry = { players, code, match: null }

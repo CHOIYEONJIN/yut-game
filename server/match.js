@@ -4,6 +4,18 @@
 import { createGame, throwYut, applyMove } from '../src/rules/game.js'
 import { botStep } from '../src/rules/bot.js'
 
+// 목록의 순서를 무작위로 섞은 새 목록을 돌려준다 (원래 목록은 그대로).
+// 게임을 시작할 때 차례 순서를 정하는 데 쓴다: 먼저 들어온 사람이 늘 먼저 하지 않도록.
+// 방법: 뒤에서부터 한 칸씩, 그 칸과 그 앞의 아무 칸이나 하나 골라 자리를 바꾼다.
+export function shuffle(items, random = Math.random) {
+  const list = [...items]
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1))
+    ;[list[i], list[j]] = [list[j], list[i]]
+  }
+  return list
+}
+
 // seats: [{ playerId, name, kind: 'human' | 'bot' }] (순서 = 플레이어 번호)
 export function createMatch({
   seats,
