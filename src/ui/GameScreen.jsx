@@ -135,7 +135,7 @@ export default function GameScreen({ state, onChange }) {
         {state.phase === 'move' && moves.length > 0 && result && (
           <div className="move-help">
             {pickedPiece === null ? (
-              <p className="hint">움직일 말을 고르세요 (판이나 대기 공간의 노란 테두리)</p>
+              <p className="hint">움직일 말을 고르세요 (판 위는 점선 고리, 대기 공간은 금색 고리가 있는 말)</p>
             ) : (
               <>
                 <p className="hint">갈 곳을 고르세요 (깜빡이는 자리)</p>

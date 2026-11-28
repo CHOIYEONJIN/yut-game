@@ -21,7 +21,9 @@ export default function Board({ state, clickablePieceIds = [], selectedPieceId =
   const waitingHere = getGroupAt(state, 0).some((p) => p.status === 'waiting')
 
   return (
-    <svg className="board" viewBox="-50 -50 800 760" role="img" aria-label="윷판">
+    // role="group": 화면 읽기 프로그램이 윷판을 "그림 한 장"이 아니라 "누를 수 있는 것들이 든 묶음"으로 읽게 한다.
+    // (role="img"이면 안쪽의 말, 갈 곳 버튼을 읽지 못한다)
+    <svg className="board" viewBox="-50 -50 800 760" role="group" aria-label="윷판">
       {/* 판 바탕 */}
       <rect x="-30" y="-30" width="660" height="660" rx="6" className="board-paper" />
 
@@ -57,11 +59,14 @@ export default function Board({ state, clickablePieceIds = [], selectedPieceId =
             className={`piece${clickable ? ' clickable' : ''}${selected ? ' selected' : ''}`}
             role={clickable ? 'button' : undefined}
             tabIndex={clickable ? 0 : undefined}
-            aria-label={`${owner.name}의 말 ${group.length}개`}
+            aria-label={`${owner.name}의 말 ${group.length}개, ${pos === 0 ? '출발점' : `${pos}번 칸`}${clickable ? ', 누르면 고르기' : ''}`}
             onClick={() => clickable && onPieceClick?.(leader.id)}
             onKeyDown={clickable ? onEnter(() => onPieceClick?.(leader.id)) : undefined}
           >
-            <circle cx={p.x} cy={p.y} r="20" fill={owner.color} />
+            {/* 고를 수 있거나 고른 말은 바깥에 먹색 고리를 따로 그린다.
+                말 색(특히 노랑)과 겹치지 않도록 말과 고리 사이에 틈을 둔다 */}
+            {(clickable || selected) && <circle cx={p.x} cy={p.y} r="30" className="piece-halo" />}
+            <circle cx={p.x} cy={p.y} r="20" fill={owner.color} className="piece-body" />
             {group.length > 1 && (
               <text x={p.x} y={p.y + 7} className="piece-count">{group.length}</text>
             )}

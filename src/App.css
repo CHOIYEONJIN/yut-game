@@ -68,7 +68,7 @@ button {
 }
 
 /* 말 */
-.piece circle {
+.piece-body {
   stroke: var(--ink);
   stroke-width: 3;
 }
@@ -87,14 +87,31 @@ button {
   cursor: pointer;
 }
 
-.piece.clickable circle {
-  stroke: var(--gold);
-  stroke-width: 6;
+/* 고를 수 있는 말: 말 바깥의 먹색 점선 고리 (한지 바탕과 모든 말 색에서 잘 보임) */
+.piece-halo {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 5;
+  stroke-dasharray: 9 6;
 }
 
-.piece.selected circle {
-  stroke: #fff;
+/* 고른 말: 점선이 아닌 굵은 실선 고리 */
+.piece.selected .piece-halo {
   stroke-width: 7;
+  stroke-dasharray: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* 고를 수 있는 말의 점선 고리가 천천히 돈다 */
+  .piece.clickable:not(.selected) .piece-halo {
+    animation: halo-spin 1.6s linear infinite;
+  }
+}
+
+@keyframes halo-spin {
+  to {
+    stroke-dashoffset: -30;
+  }
 }
 
 /* 갈 수 있는 곳 */
@@ -478,14 +495,13 @@ button {
   cursor: default;
 }
 
+/* 고를 수 있는 돌: 돌과 고리 사이에 바탕색 틈을 두어 노란 돌에서도 금색 고리가 구분되게 한다 */
 .stone.clickable {
-  border-color: var(--gold);
-  box-shadow: 0 0 0 2px var(--gold);
+  box-shadow: 0 0 0 3px var(--indigo-deep), 0 0 0 6px var(--gold);
 }
 
 .stone.selected {
-  border-color: #fff;
-  box-shadow: 0 0 0 3px #fff;
+  box-shadow: 0 0 0 3px var(--indigo-deep), 0 0 0 7px #fff;
 }
 
 .slot {
