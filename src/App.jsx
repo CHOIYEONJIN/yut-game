@@ -1,20 +1,82 @@
-// 앱 전체: 시작 화면 → 게임 화면 → 결과 화면을 전환한다
+// 앱 전체: 닉네임 → 서버 연결 → 서버가 알려 준 위치(입구/빠른대전/친선대전 방/게임)에 맞는 화면
 import { useState } from 'react'
-import SetupScreen from './ui/SetupScreen.jsx'
-import GameScreen from './ui/GameScreen.jsx'
+import { getIdentity, saveName } from './net/identity.js'
+import { useServer } from './net/useServer.js'
+import NameScreen from './ui/NameScreen.jsx'
+import EntranceScreen from './ui/EntranceScreen.jsx'
+import QueueScreen from './ui/QueueScreen.jsx'
+import RoomScreen from './ui/RoomScreen.jsx'
 import ResultScreen from './ui/ResultScreen.jsx'
-import { createGame } from './rules/game.js'
 
 export default function App() {
-  const [game, setGame] = useState(null) // 게임 상태 (시작 전에는 null)
+  const [identity, setIdentity] = useState(() => getIdentity())
 
-  // 시작 전
-  if (!game) return <SetupScreen onStart={(names) => setGame(createGame(names))} />
+  if (!identity.name) {
+    return (
+      <NameScreen
+        onSave={(name) => {
+          saveName(name)
+          setIdentity(getIdentity())
+        }}
+      />
+    )
+  }
+  return <Online identity={identity} />
+}
 
-  // 게임이 끝났으면 결과 화면
-  if (game.phase === 'over') {
-    return <ResultScreen winner={game.players[game.winner]} onRestart={() => setGame(null)} />
+// 서버에 연결된 뒤의 화면들
+function Online({ identity }) {
+  const server = useServer(identity)
+  const { status, place, send } = server
+
+  if (status === 'replaced') return <Notice text="다른 창에서 접속했습니다" />
+  if (status === 'waking') return <Notice text="서버를 깨우는 중…" sub="처음 접속하면 1분쯤 걸릴 수 있어요" />
+  if (status === 'connecting' || !place) return <Notice text="서버에 연결하는 중…" />
+
+  if (server.gameOver) return <ResultScreen winner={server.gameOver.winner} onBack={server.clearGameOver} />
+
+  if (server.resumeOffer) {
+    return (
+      <div className="setup">
+        <h1 className="title">진행 중인 게임이 있어요</h1>
+        <div className="button-row">
+          <button type="button" className="primary" onClick={() => send('game:resume')}>
+            이어하기
+          </button>
+          <button type="button" className="chip" onClick={() => send('game:leave')}>
+            나가기
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  return <GameScreen state={game} onChange={setGame} />
+  if (place === 'queue') {
+    return <QueueScreen view={server.queue} onBots={() => send('queue:bots')} onLeave={() => send('queue:leave')} />
+  }
+  if (place === 'room') {
+    return <RoomScreen view={server.room} onStart={() => send('room:start')} onLeave={() => send('room:leave')} />
+  }
+  if (place === 'game') {
+    return <Notice text="게임 시작!" /> // 게임 화면은 다음 작업에서 붙인다
+  }
+  return (
+    <EntranceScreen
+      name={identity.name}
+      error={server.roomError}
+      onQuick={() => send('queue:join')}
+      onCreate={() => send('room:create')}
+      onJoin={(code) => send('room:join', { code })}
+    />
+  )
+}
+
+// 가운데에 안내 글 하나만 보여 주는 화면
+function Notice({ text, sub }) {
+  return (
+    <div className="setup" role="status">
+      <h1 className="title">{text}</h1>
+      {sub && <p className="hint">{sub}</p>}
+    </div>
+  )
 }

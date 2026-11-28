@@ -90,6 +90,18 @@ test('두 사람이 친선대전 방에서 만나 시작하고, 한 사람의 �
   await waitFor(b, 'game', (g) => g.throwSeq === 1)
 })
 
+test('방 모습에는 받는 사람의 순서(myIndex)가 들어 있다 (0이면 방장)', async () => {
+  const a = connectAs('a')
+  await waitFor(a, 'where', place('entrance'))
+  a.emit('room:create')
+  const { code, myIndex } = await waitFor(a, 'room')
+  expect(myIndex).toBe(0)
+  const b = connectAs('b')
+  await waitFor(b, 'where', place('entrance'))
+  b.emit('room:join', { code })
+  expect((await waitFor(b, 'room')).myIndex).toBe(1)
+})
+
 test('없는 초대코드로 들어가면 room:error NOT_FOUND', async () => {
   const a = connectAs('a')
   await waitFor(a, 'where', place('entrance'))

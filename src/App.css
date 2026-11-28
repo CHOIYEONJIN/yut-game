@@ -516,3 +516,86 @@ button {
   border-style: solid;
   border-width: 3px;
 }
+
+/* ---------- 입구, 빠른대전 대기, 친선대전 방 ---------- */
+.menu {
+  display: grid;
+  gap: 8px;
+}
+
+.menu .hint {
+  margin: 0 0 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.field input,
+.code-form input {
+  font: inherit;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 2px solid var(--muted);
+  background: var(--indigo-deep);
+  color: var(--text);
+}
+
+.code-form {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.code-form input {
+  flex: 1;
+  min-width: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.slots-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.slot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--indigo-deep);
+}
+
+.slot-row.empty {
+  color: var(--muted);
+  border: 2px dashed rgba(169, 177, 198, 0.45);
+  background: transparent;
+}
+
+.slot-row.empty .dot {
+  border-style: dashed;
+  border-color: var(--muted);
+}
+
+.invite-code {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--gold);
+  margin: 0 0 8px;
+}

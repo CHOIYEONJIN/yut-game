@@ -35,10 +35,10 @@ export function createHub(io, timing = {}) {
 
   const rooms = createRooms({ startMatch: (code, seats) => beginMatch(seats, code) })
 
-  // 방 안의 모두에게 방 모습을 보낸다
+  // 방 안의 모두에게 방 모습을 보낸다 (myIndex: 받는 사람이 목록의 몇 번째인지, 0이면 방장)
   function sendRoom(code) {
     const view = rooms.view(code)
-    if (view) rooms.members(code).forEach((id) => emitTo(id, 'room', view))
+    if (view) rooms.members(code).forEach((id, i) => emitTo(id, 'room', { ...view, myIndex: i }))
   }
 
   // 게임을 보는 사람들에게 각자의 자리 번호와 함께 게임 모습을 보낸다
@@ -137,7 +137,7 @@ export function createHub(io, timing = {}) {
         socket.emit('queue', queue.view())
       } else if (person.place === 'room' && rooms.codeOf(playerId)) {
         moveTo(person, 'room')
-        socket.emit('room', rooms.view(rooms.codeOf(playerId)))
+        sendRoom(rooms.codeOf(playerId))
       } else {
         moveTo(person, 'entrance')
       }
