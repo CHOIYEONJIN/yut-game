@@ -11,6 +11,7 @@ export function createMatch({
   turnMs = 30000, // 사람의 한 동작 제한 시간
   botDelayMs = 1000, // 컴퓨터가 "생각하는" 시간
   rollMs = 900, // 윷가락이 굴러가는 시간 (화면의 ROLL_MS와 같게)
+  emptyGraceMs = 60000, // 접속한 사람이 아무도 없을 때 게임을 남겨 두는 시간 (그사이 돌아오면 이어서 한다)
   onUpdate = () => {},
   onEnd = () => {},
   initialState, // 테스트에서 상태를 꾸밀 때만 쓴다
@@ -25,6 +26,7 @@ export function createMatch({
   let deadline = null // 사람이 직접 둘 때 이 동작의 마감 시각
   let justThrew = false // 방금 던졌는지 (굴러가는 시간만큼 기다려 주기 위해)
   let ended = false
+  let graceTimer = null // 사람이 모두 끊겼을 때 게임을 끝내는 예약
 
   // 지금 차례를 컴퓨터가 두는지
   const botControls = () => {
@@ -73,6 +75,8 @@ export function createMatch({
   // 게임 끝내기 (한 번만)
   function finish(winner) {
     ended = true
+    clearTimeout(graceTimer)
+    graceTimer = null
     clearTimeout(timer)
     timer = null
     deadline = null
@@ -93,13 +97,22 @@ export function createMatch({
       finish(state.winner)
       return
     }
-    // 접속한 사람이 아무도 없으면 게임을 끝낸다
-    if (!seatInfo.some((s) => s.kind === 'human' && s.status === 'playing')) {
-      clearTimeout(timer)
-      deadline = null
-      onUpdate(view())
-      finish(null)
-      return
+    // 접속한 사람이 아무도 없을 때:
+    // - 모두 "게임 나가기"로 완전히 나갔으면 바로 끝낸다
+    // - 끊긴 사람이 있으면 1분 동안 기다린다 (그사이 컴퓨터가 대신 두고, 돌아오면 이어서 한다)
+    const humans = seatInfo.filter((s) => s.kind === 'human')
+    if (!humans.some((s) => s.status === 'playing')) {
+      const endNow = () => {
+        clearTimeout(timer)
+        deadline = null
+        onUpdate(view())
+        finish(null)
+      }
+      if (!humans.some((s) => s.status === 'away')) return endNow()
+      if (graceTimer === null) graceTimer = setTimeout(endNow, emptyGraceMs)
+    } else if (graceTimer !== null) {
+      clearTimeout(graceTimer) // 누군가 돌아왔다
+      graceTimer = null
     }
     if (reschedule) schedule()
     onUpdate(view())
@@ -156,6 +169,7 @@ export function createMatch({
 
     stop() {
       ended = true
+      clearTimeout(graceTimer)
       clearTimeout(timer)
       timer = null
     },

@@ -146,15 +146,35 @@ test('완전히 나가면 다시 접속해도 끝까지 컴퓨터가 둔다', ()
   expect(match.act('a', { type: 'throw' })).toBe(false)
 })
 
-test('사람이 모두 끊기거나 나가면 onEnd({ winner: null })이 한 번 불린다', () => {
+test('사람이 모두 끊기면 1분 동안 기다렸다가 onEnd({ winner: null })이 한 번 불린다', () => {
   const { match, ends } = setup()
   match.setConnected('a', false)
-  expect(ends).toEqual([])
   match.leave('b')
+  expect(ends).toEqual([])
+  vi.advanceTimersByTime(59999)
+  expect(ends).toEqual([])
+  vi.advanceTimersByTime(1)
   expect(ends).toEqual([{ winner: null }])
   vi.advanceTimersByTime(100000)
   match.setConnected('a', true)
   expect(ends.length).toBe(1)
+})
+
+test('혼자 하던 사람이 끊겼다가 1분 안에 돌아오면 게임이 이어진다', () => {
+  const { match, ends } = setup({ seats: [human('a'), bot('컴퓨터1')] })
+  match.setConnected('a', false)
+  vi.advanceTimersByTime(30000)
+  match.setConnected('a', true)
+  vi.advanceTimersByTime(60000)
+  expect(ends).toEqual([])
+  expect(match.view().seats[0].status).toBe('playing')
+})
+
+test('사람이 모두 완전히 나가면 바로 끝낸다', () => {
+  const { match, ends } = setup()
+  match.leave('a')
+  match.leave('b')
+  expect(ends).toEqual([{ winner: null }])
 })
 
 test('우승자가 나오면 마지막 상태를 보낸 뒤 onEnd({ winner })', () => {

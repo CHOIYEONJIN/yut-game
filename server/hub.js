@@ -12,7 +12,7 @@ function cleanName(name) {
 }
 
 export function createHub(io, timing = {}) {
-  const { countdownMs, turnMs, botDelayMs, rollMs } = timing
+  const { countdownMs, turnMs, botDelayMs, rollMs, emptyGraceMs } = timing
   // playerId → { playerId, name, socket, place, matchId, offer }
   //   place: 'entrance' | 'queue' | 'room' | 'game' (게임 화면을 보는 중) | 'away' (끊김)
   //   matchId: 나가지 않은 게임이 있으면 그 번호, offer: "이어하기/나가기"를 묻는 중인지
@@ -64,6 +64,7 @@ export function createHub(io, timing = {}) {
       turnMs,
       botDelayMs,
       rollMs,
+      emptyGraceMs,
       onUpdate: () => sendGame(id),
       onEnd: ({ winner }) => endMatch(id, winner),
     })
