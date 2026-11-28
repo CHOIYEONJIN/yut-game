@@ -1,17 +1,7 @@
 // 끝까지 플레이 검사: 무작위로 수백 판을 끝까지 두면서 규칙이 깨지지 않는지 확인한다
 import { test, expect } from 'vitest'
 import { createGame, throwYut, getLegalMoves, applyMove } from '../game.js'
-
-// 같은 씨앗(seed)이면 항상 같은 숫자가 나오는 랜덤 (테스트를 매번 똑같이 재현하기 위함)
-function seededRandom(seed) {
-  let a = seed
-  return () => {
-    a = (a + 0x6d2b79f5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
+import { seededRandom } from './helpers.js'
 
 // 매 순간 지켜져야 하는 규칙들
 function checkInvariants(s) {
