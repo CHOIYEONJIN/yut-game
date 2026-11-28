@@ -2,7 +2,7 @@
 // 규칙 판단은 전부 rules/game.js의 함수에 맡긴다. 이 화면은 "무엇을 골랐는지"만 기억한다.
 import { useState } from 'react'
 import Board from './Board.jsx'
-import { throwYut, getLegalMoves, applyMove, passUnusable } from '../rules/game.js'
+import { throwYut, getLegalMoves, applyMove } from '../rules/game.js'
 import { RESULT_LABELS } from '../rules/yut.js'
 import { usableResults, stacksOnOwnPiece } from './selection.js'
 import YutSticks from './YutSticks.jsx'
@@ -147,14 +147,6 @@ export default function GameScreen({ state, onChange }) {
           </div>
         )}
 
-        {state.phase === 'move' && moves.length === 0 && (
-          <div className="move-help">
-            <p className="hint">남은 결과로 움직일 수 있는 말이 없습니다.</p>
-            <button type="button" className="primary" onClick={() => update(passUnusable(state))}>
-              턴 넘기기
-            </button>
-          </div>
-        )}
 
       </aside>
     </div>

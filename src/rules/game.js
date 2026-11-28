@@ -57,6 +57,7 @@ export function throwYut(state, random = Math.random) {
     } else {
       next.phase = 'move'
       next.message = '낙! 모은 결과만 쓰고 차례가 끝납니다'
+      passIfStuck(next, true) // 모은 결과로도 움직일 말이 없으면 자동으로 다음 차례
     }
     return next
   }
@@ -67,6 +68,7 @@ export function throwYut(state, random = Math.random) {
   if (isBonus(result)) next.throwsLeft += 1
   // 더 던질 것이 없으면 모인 결과를 쓰는 이동 단계로 넘어간다
   if (next.throwsLeft === 0) next.phase = 'move'
+  passIfStuck(next, true) // 모은 결과로 움직일 말이 없으면 자동으로 다음 차례
   return next
 }
 
@@ -210,6 +212,7 @@ export function applyMove(state, move) {
     startNextTurn(next) // 결과를 다 썼다 → 다음 플레이어
   } else {
     next.phase = 'move' // 아직 쓸 결과가 남았다
+    passIfStuck(next) // 남은 결과로 움직일 말이 없으면 자동으로 다음 차례
   }
   return next
 }
@@ -224,14 +227,18 @@ function startNextTurn(state) {
   state.lastSticks = null
 }
 
-// 남은 결과를 하나도 쓸 수 없을 때, 버리고 턴을 넘긴다.
-// 쓸 수 있는 이동이 하나라도 있으면 넘길 수 없다 (반드시 써야 함).
-export function passUnusable(state) {
-  if (state.phase !== 'move' || getLegalMoves(state).length > 0) return state
-  const next = structuredClone(state)
-  startNextTurn(next)
-  next.message = '쓸 수 있는 결과가 없어 턴이 넘어갑니다'
-  return next
+// 움직일 수 있는 말이 없을 때 보여 주는 안내 (모두에게 같은 문구)
+export const NO_MOVES_MESSAGE = '움직일 수 있는 말이 없습니다.'
+
+// 이동 단계인데 남은 결과로 움직일 수 있는 말이 하나도 없으면, 버튼을 누르지 않아도 바로 다음 차례로 넘긴다.
+// (state를 직접 고친다. 내부에서만 사용)
+// keepThrow가 true면 방금 던진 윷 모양은 남겨 둔다 (던진 사람이 무엇이 나왔는지는 볼 수 있게)
+function passIfStuck(state, keepThrow = false) {
+  if (state.phase !== 'move' || getLegalMoves(state).length > 0) return
+  const { lastThrow, lastSticks } = state
+  startNextTurn(state)
+  if (keepThrow) Object.assign(state, { lastThrow, lastSticks })
+  state.message = NO_MOVES_MESSAGE
 }
 
 // 어떤 칸에 있는 말들 (화면에서 말을 그릴 때 사용)

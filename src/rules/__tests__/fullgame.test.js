@@ -1,6 +1,6 @@
 // 끝까지 플레이 검사: 무작위로 수백 판을 끝까지 두면서 규칙이 깨지지 않는지 확인한다
 import { test, expect } from 'vitest'
-import { createGame, throwYut, getLegalMoves, applyMove, passUnusable } from '../game.js'
+import { createGame, throwYut, getLegalMoves, applyMove } from '../game.js'
 
 // 같은 씨앗(seed)이면 항상 같은 숫자가 나오는 랜덤 (테스트를 매번 똑같이 재현하기 위함)
 function seededRandom(seed) {
@@ -44,14 +44,12 @@ function playGame(names, seed, seen) {
     if (s.phase === 'throw') {
       s = throwYut(s, random)
       if (s.lastThrow === 'nak') seen.nak++
+      if (s.message === '움직일 수 있는 말이 없습니다.') seen.pass++
       continue
     }
     const moves = getLegalMoves(s)
-    if (moves.length === 0) {
-      s = passUnusable(s)
-      seen.pass++
-      continue
-    }
+    // 이동 단계에서는 언제나 움직일 수 있는 말이 있어야 한다 (없으면 자동으로 다음 차례로 넘어가므로)
+    expect(moves.length).toBeGreaterThan(0)
     const move = moves[Math.floor(random() * moves.length)]
     const result = s.pool[move.resultIndex]
     const mover = s.pieces[move.pieceId]
@@ -67,6 +65,7 @@ function playGame(names, seed, seen) {
     const next = applyMove(s, move)
     expect(next).not.toBe(s) // 가능한 이동은 반드시 적용되어야 한다
     s = next
+    if (s.message === '움직일 수 있는 말이 없습니다.') seen.pass++
   }
   throw new Error('게임이 끝나지 않았다')
 }

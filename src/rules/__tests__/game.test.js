@@ -183,7 +183,7 @@ describe('가능한 이동', () => {
 })
 
 // ---------------- Task 6: 잡기, 업기, 턴 진행, 승리 ----------------
-import { passUnusable, getGroupAt } from '../game.js'
+import { getGroupAt } from '../game.js'
 
 describe('잡기', () => {
   test('상대 말이 있는 칸에 멈추면 잡고 한 번 더 던진다', () => {
@@ -281,15 +281,25 @@ describe('턴 진행', () => {
     expect(s).toMatchObject({ current: 0, phase: 'move', pool: ['do'] })
   })
 
-  test('쓸 수 있는 결과가 없으면 턴 넘기기', () => {
-    const s = passUnusable(withPool(twoPlayers(), ['backdo']))
+  test('던진 결과로 움직일 말이 없으면 자동으로 다음 차례', () => {
+    // 판에 말이 없을 때 빽도만 나오면 쓸 곳이 없다
+    const s = throwYut(twoPlayers(), fixedRandom('backdo'))
     expect(s).toMatchObject({ current: 1, phase: 'throw', throwsLeft: 1, pool: [] })
-    expect(s.message).toBe('쓸 수 있는 결과가 없어 턴이 넘어갑니다')
+    expect(s.message).toBe('움직일 수 있는 말이 없습니다.')
   })
 
-  test('쓸 수 있는 결과가 있으면 턴을 넘길 수 없다', () => {
-    const s = withPool(twoPlayers(), ['gae'])
-    expect(passUnusable(s)).toEqual(s)
+  test('말을 옮긴 뒤 남은 결과로 움직일 말이 없으면 자동으로 다음 차례', () => {
+    // 유일하게 판 위에 있던 말이 개로 완주하면, 남은 빽도는 쓸 곳이 없다
+    let s = withPool(setPiece(twoPlayers(), 0, 'board', 19, [0, 19]), ['gae', 'backdo'])
+    s = applyMove(s, find(getLegalMoves(s), 0))
+    expect(s.pieces[0].status).toBe('done')
+    expect(s).toMatchObject({ current: 1, phase: 'throw', pool: [] })
+    expect(s.message).toBe('움직일 수 있는 말이 없습니다.')
+  })
+
+  test('움직일 말이 있으면 자동으로 넘어가지 않는다', () => {
+    const s = throwYut(twoPlayers(), fixedRandom('gae'))
+    expect(s).toMatchObject({ current: 0, phase: 'move', message: '' })
   })
 })
 
