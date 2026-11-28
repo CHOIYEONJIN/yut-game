@@ -599,3 +599,34 @@ button {
   color: var(--gold);
   margin: 0 0 8px;
 }
+
+/* ---------- 온라인 게임 ---------- */
+.auto-note,
+.seat-badge {
+  background: rgba(169, 177, 198, 0.2);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 999px;
+}
+
+.auto-note {
+  display: inline-block;
+  margin: 0 0 12px;
+}
+
+.time-left {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.time-left.urgent {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.leave {
+  margin-top: 8px;
+}

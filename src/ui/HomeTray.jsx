@@ -2,8 +2,11 @@
 // - 출발 전 말: 플레이어 색의 돌 (내 차례에 꺼낼 수 있으면 금색 고리, 누르면 그 말을 고른다)
 // - 판 위에 나간 말: 빈 자리
 // - 완주한 말: 빈 자리에 ✓ 표시
-// props: state, clickablePieceIds, selectedPieceId, onPieceClick(pieceId)
-export default function HomeTray({ state, clickablePieceIds = [], selectedPieceId = null, onPieceClick }) {
+// - 이름 옆: 내 자리 (나), 컴퓨터 자리 🤖, 끊긴 자리 "자동 진행 중", 나간 자리 "나감"
+// props: state, seats(서버의 자리 정보), mySeat, clickablePieceIds, selectedPieceId, onPieceClick(pieceId)
+const SEAT_BADGES = { away: '자동 진행 중', left: '나감' }
+
+export default function HomeTray({ state, seats = [], mySeat = null, clickablePieceIds = [], selectedPieceId = null, onPieceClick }) {
   return (
     <div className="tray" aria-label="대기 공간">
       {state.players.map((player, owner) => {
@@ -13,7 +16,12 @@ export default function HomeTray({ state, clickablePieceIds = [], selectedPieceI
         const waiting = mine.filter((p) => p.status === 'waiting').length
         return (
           <div key={owner} className={owner === state.current ? 'tray-row current' : 'tray-row'}>
-            <span className="tray-name">{player.name}</span>
+            <span className="tray-name">
+              {seats[owner]?.kind === 'bot' && <span aria-label="컴퓨터">🤖 </span>}
+              {player.name}
+              {owner === mySeat && ' (나)'}
+            </span>
+            {SEAT_BADGES[seats[owner]?.status] && <span className="seat-badge">{SEAT_BADGES[seats[owner].status]}</span>}
             <div className="tray-slots">
               {mine.map((p) => {
                 if (p.status === 'home') {

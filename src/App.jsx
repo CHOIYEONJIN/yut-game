@@ -7,6 +7,7 @@ import EntranceScreen from './ui/EntranceScreen.jsx'
 import QueueScreen from './ui/QueueScreen.jsx'
 import RoomScreen from './ui/RoomScreen.jsx'
 import ResultScreen from './ui/ResultScreen.jsx'
+import GameScreen from './ui/GameScreen.jsx'
 
 export default function App() {
   const [identity, setIdentity] = useState(() => getIdentity())
@@ -58,7 +59,15 @@ function Online({ identity }) {
     return <RoomScreen view={server.room} onStart={() => send('room:start')} onLeave={() => send('room:leave')} />
   }
   if (place === 'game') {
-    return <Notice text="게임 시작!" /> // 게임 화면은 다음 작업에서 붙인다
+    if (!server.game) return <Notice text="게임을 불러오는 중…" />
+    return (
+      <GameScreen
+        view={server.game}
+        mySeat={server.game.mySeat}
+        onAction={(action) => send('game:action', { action })}
+        onLeave={() => send('game:leave')}
+      />
+    )
   }
   return (
     <EntranceScreen
