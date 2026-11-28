@@ -102,6 +102,20 @@ test('방 모습에는 받는 사람의 순서(myIndex)가 들어 있다 (0이�
   expect((await waitFor(b, 'room')).myIndex).toBe(1)
 })
 
+test('이상한 메시지를 보내도 서버가 꺼지지 않는다', async () => {
+  const bad = connect(`http://localhost:${server.port}`, { forceNew: true, transports: ['websocket'] })
+  sockets.push(bad)
+  await new Promise((r) => bad.on('connect', r))
+  bad.emit('hello', null)
+  bad.emit('hello', { playerId: 'x', name: 'x' })
+  bad.emit('room:join', { code: { toString: 1, valueOf: 1 } })
+  bad.emit('room:join', null)
+  bad.emit('game:action', null)
+  await sleep(100)
+  const a = connectAs('a')
+  await waitFor(a, 'where', place('entrance'))
+})
+
 test('없는 초대코드로 들어가면 room:error NOT_FOUND', async () => {
   const a = connectAs('a')
   await waitFor(a, 'where', place('entrance'))

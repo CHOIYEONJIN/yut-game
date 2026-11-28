@@ -53,6 +53,7 @@ export function useServer(identity) {
     socket.on('game', setGame)
     socket.on('game:over', (result) => {
       inGameRef.current = false
+      setResumeOffer(false) // 이어할지 묻던 게임이 끝났으면 더 묻지 않는다
       setGameOver(result)
     })
     socket.on('resume:offer', () => setResumeOffer(true))

@@ -99,8 +99,17 @@ export function createHub(io, timing = {}) {
   io.on('connection', (socket) => {
     let person = null // 이 소켓의 사람 (hello를 받은 뒤 정해진다)
 
-    socket.on('hello', (data = {}) => {
-      const { playerId, name, resume } = data
+    // 화면에서 온 메시지를 처리하다 오류가 나도 서버 전체가 멈추지 않게 감싼다
+    const safe = (handler) => (data) => {
+      try {
+        handler(data)
+      } catch (error) {
+        console.error('메시지 처리 중 오류:', error)
+      }
+    }
+
+    socket.on('hello', safe((data) => {
+      const { playerId, name, resume } = data ?? {}
       if (person || typeof playerId !== 'string' || playerId.length === 0 || playerId.length > 100) return
       person = people.get(playerId)
       if (person?.socket) {
@@ -141,10 +150,11 @@ export function createHub(io, timing = {}) {
       } else {
         moveTo(person, 'entrance')
       }
-    })
+    }))
 
     // hello 전에 온 메시지는 무시한다
-    const on = (event, handler) => socket.on(event, (data) => person && person.socket === socket && handler(data ?? {}))
+    const on = (event, handler) =>
+      socket.on(event, safe((data) => person && person.socket === socket && handler(data ?? {})))
 
     on('queue:join', () => {
       if (!isFree(person)) return

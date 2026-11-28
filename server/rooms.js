@@ -19,11 +19,14 @@ export function createRooms({ startMatch, random = Math.random }) {
     }
   }
 
-  const find = (code) => rooms.get(String(code ?? '').trim().toUpperCase())
+  // 화면에서 온 코드는 글자일 때만 찾는다 (이상한 값이 와도 서버가 멈추지 않게)
+  const find = (code) => (typeof code === 'string' ? rooms.get(code.trim().toUpperCase()) : undefined)
 
+  // 이 사람이 들어가 있는 "시작 전" 방의 코드.
+  // 시작한 방은 게임이 끝날 때까지 남아 있지만, 그 게임에서 나간 사람이 새 방에 들어갈 수 있도록 건너뛴다.
   function codeOf(playerId) {
     for (const room of rooms.values()) {
-      if (room.players.some((p) => p.playerId === playerId)) return room.code
+      if (!room.started && room.players.some((p) => p.playerId === playerId)) return room.code
     }
     return null
   }
@@ -48,7 +51,7 @@ export function createRooms({ startMatch, random = Math.random }) {
     leave(playerId) {
       const code = codeOf(playerId)
       const room = rooms.get(code)
-      if (!room || room.started) return null
+      if (!room) return null
       room.players = room.players.filter((p) => p.playerId !== playerId)
       if (room.players.length === 0) rooms.delete(code)
       return code
@@ -57,7 +60,7 @@ export function createRooms({ startMatch, random = Math.random }) {
     // 방장이고, 2명 이상이고, 아직 시작 전일 때만 시작
     start(playerId) {
       const room = rooms.get(codeOf(playerId))
-      if (!room || room.started || room.players.length < 2 || room.players[0].playerId !== playerId) return false
+      if (!room || room.players.length < 2 || room.players[0].playerId !== playerId) return false
       room.started = true
       startMatch(
         room.code,
